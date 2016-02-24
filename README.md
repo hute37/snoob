@@ -1,0 +1,2 @@
+# snoob
+Scala Scratchpad

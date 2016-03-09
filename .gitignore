@@ -3,6 +3,7 @@
 
 # sbt specific
 .cache
+.cache-main
 .history
 .lib/
 dist/*
@@ -16,3 +17,12 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 /bin/
+.classpath
+.project
+.settings
+.idea
+.idea_modules
+.ensime
+.ensime_cache
+
+

@@ -51,7 +51,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.1.6",
     "com.ning" % "async-http-client" % "1.7.19",
     "org.jsoup" % "jsoup" % "1.8.1",
     "io.reactivex" %% "rxscala" % "0.25.0",
@@ -60,6 +59,9 @@ libraryDependencies ++= {
     "org.scalacheck" %% "scalacheck" % "1.12.2" % Test
   )
 }
+
+//     "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.1.6",
+
 
 fork in Test := true
 

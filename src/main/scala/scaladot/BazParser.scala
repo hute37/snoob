@@ -105,12 +105,34 @@ class BazParser  extends StdTokenParsers with ImplicitConversions {
   def IDi = accept("identifier", { case Identifier(n) => n})
 
 
+  case class P(z: Int*)
+
+  def  pq = ("[" ~> ps <~ "]") ^^ {P(_:_*)}
+  def  ps = repsep(px, ",")
+  def  px = "0" ^^^ 0
+
+  val s: Parser[String] = "z"
+
+
+
+
+  case class Q(z: Int*)
+
+  def  qq: Parser[Q] = (qk1 ~> qs <~ qk2) ^^ {Q(_:_*)}
+  def  qs: Parser[Seq[Int]] = repsep(qx, qv)
+  def  qx: Parser[Int] = "0" ^^^ 0
+  def  qv: Parser[String] = "," ^^^ ","
+  def  qk1: Parser[String] = "[" ^^^ "["
+  def  qk2: Parser[String] = "]" ^^^ "]"
+
+
+
 }
 
 object Baz extends BazParser {
 
   def parse(input: String) =
-    phrase(dot)(new lexical.Scanner(input)) match {
+    phrase(baz)(new lexical.Scanner(input)) match {
       case Success(result, _) => println("Success!"); Some(result)
       case n @ _ => println(n); None
     }
@@ -118,23 +140,11 @@ object Baz extends BazParser {
 
   def main(args: Array[String]) {
     val x = parse("""
-      digraph acm {
-        hello -> world;
-        test:up:n -> world;
-        style = filled;
-
-        subgraph cluster {
-          node [style=filled,color=white];
-          toast -> bingo;
-          zot -> bingo;
-          zot -> test;
-          style=filled;
-          color=lightgrey;
-          label = "Below";
-        }
-
-    }
-
+      baz("O") => [
+        foo("A") -> { bar("x1"), bar("x2"), bar("x3") },
+        foo("B") -> { bar("y1"), bar("y2") },
+        foo("C") -> { bar("z1") },
+      ]
                   """)
 
     println(x)
@@ -172,13 +182,14 @@ abstract class BazComponent {
     }
 
     this match {
-      case Bar(id) =>
+      case Bar(id, foos @ _*) =>
         indent(level,b)
         b append "bar " append id
-      case Foo(id, foos @ _*) =>
+        between(" -> ", foos)
+      case Foo(id, bars @ _*) =>
         indent(level,b)
         b append "Foo " append id
-        between(" -> ", foos)
+        between(" -> ", bars)
       case Baz(id, foos @ _*) =>
         indent(level,b)
         b append "BAZ " append id
@@ -192,6 +203,6 @@ trait BarComponent extends BazComponent
 trait FooComponent extends BazComponent
 trait RootComponent extends BazComponent
 
-case class Bar(id: String) extends BazComponent with BarComponent
+case class Bar(id: String, foos: Foo*) extends BazComponent with BarComponent
 case class Foo(id: String, bars: Bar*) extends FooComponent with BarComponent
 case class Baz(id: String, foos: Foo*) extends BazComponent with RootComponent

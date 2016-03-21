@@ -13,14 +13,17 @@ class DotParser extends StdTokenParsers with ImplicitConversions {
   // Fill in abstract defs
   type Tokens = DotLexer
   val lexical = new Tokens
+
+
  
   // Configure lexical parsing
   lexical.reserved ++= List("strict", "graph", "digraph", "node", "edge", "subgraph")
   lexical.delimiters ++= List("{", "}", "[", "]", ":", "=", ";", ",", "->", "--","\"")
- 
-  import Dot._
+
+
   import lexical._
-   
+
+
   /** We want to map an Option of None to the empty string identifier,
   and Some(s) to s.
   */
@@ -75,7 +78,7 @@ class DotParser extends StdTokenParsers with ImplicitConversions {
 
 
   def attr_set = ID ~ ( "=" ~> a_value ) ^^
-    { case left ~ right => right match { case Pair(q,v) => Attr(left, Some(v), q) }}
+    { case left ~ right => right match { case (q,v) => Attr(left, Some(v), q) }}
    
   //attr_stmt          :          (graph | node | edge) attr_list
   def  attr_stmt = attr_list_type ~ attr_list ^^
@@ -89,25 +92,6 @@ class DotParser extends StdTokenParsers with ImplicitConversions {
   //attr_list   :   '[' [ a_list ] ']' [ attr_list ]
   def  attr_list : Parser[List[Attr]]  = (("[" ~> a_list <~ "]")*) ^^
     { case lists => lists.flatMap(l => l) }
-
-
-  case class P(z: Int*)
-
-  def  pq = ("[" ~> ps <~ "]") ^^ {P(_:_*)}
-  def  ps = repsep(px, ",")
-  def  px = "0" ^^^ 0
-
-
-
-  case class Q(z: Int*)
-
-  def  qq: Parser[Q] = (qk1 ~> qs <~ qk2) ^^ {Q(_:_*)}
-  def  qs: Parser[List[Int]] = repsep(qx, qk)
-  def  qx: Parser[Int] = "0" ^^^ 0
-  def  qk: Parser[String] = ","
-  def  qk1: Parser[String] = "["
-  def  qk2: Parser[String] = "]"
-
 
 
   //a_list      :   ID [ '=' ID ] [ ',' ] [ a_list ]

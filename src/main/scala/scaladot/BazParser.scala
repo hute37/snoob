@@ -82,49 +82,28 @@ class BazParser  extends StdTokenParsers with ImplicitConversions {
 
   // Configure lexical parsing
   lexical.reserved ++= List("baz", "foo", "bar")
-  lexical.delimiters ++= List("{", "}", "[", "]", "(", ")", ";", ",", "->", "--","\"")
+  lexical.delimiters ++= List("{", "}", "[", "]", "(", ")", ";", ",","->","=>", "--","\"")
 
   import lexical._
 
 
-  def baz = "baz" ~> ID ~ ("=>" ~> foolist) ^^
+  def baz = "baz" ~> id ~ ("=>" ~> foolist) ^^
     { case id ~ foos => Baz(id, foos:_*) }
 
   def foolist =  "[" ~> (repsep(foo,",")) <~ "]"
 
-  def foo = "foo" ~> ID ~ ("->" ~> barlist) ^^
+  def foo = "foo" ~> id ~ ("->" ~> barlist) ^^
     { case id ~ bars => Foo(id, bars:_*) }
 
   def barlist =  "{" ~> (repsep(bar,",")) <~ "}"
 
-  def bar = "bar" ~> ID ^^
+  def bar = "bar" ~> id ^^
     { case id => Bar(id) }
 
-  def ID:Parser[String] = "(" ~> (IDs | IDi) <~ ")"
+  def id:Parser[String] = "(" ~> ID <~ ")"
+  def ID:Parser[String] = IDs | IDi
   def IDs = accept("string", { case StringLit(n) => n })
   def IDi = accept("identifier", { case Identifier(n) => n})
-
-
-  case class P(z: Int*)
-
-  def  pq = ("[" ~> ps <~ "]") ^^ {P(_:_*)}
-  def  ps = repsep(px, ",")
-  def  px = "0" ^^^ 0
-
-  val s: Parser[String] = "z"
-
-
-
-
-  case class Q(z: Int*)
-
-  def  qq: Parser[Q] = (qk1 ~> qs <~ qk2) ^^ {Q(_:_*)}
-  def  qs: Parser[Seq[Int]] = repsep(qx, qv)
-  def  qx: Parser[Int] = "0" ^^^ 0
-  def  qv: Parser[String] = "," ^^^ ","
-  def  qk1: Parser[String] = "[" ^^^ "["
-  def  qk2: Parser[String] = "]" ^^^ "]"
-
 
 
 }
@@ -139,13 +118,27 @@ object Baz extends BazParser {
 
 
   def main(args: Array[String]) {
-    val x = parse("""
+
+    testbaz()
+
+  }
+
+  def testbaz(): Unit = {
+    testrule(baz, """
       baz("O") => [
         foo("A") -> { bar("x1"), bar("x2"), bar("x3") },
         foo("B") -> { bar("y1"), bar("y2") },
         foo("C") -> { bar("z1") },
       ]
                   """)
+
+  }
+
+  def testrule[T](p: Parser[T],input: String) = {
+    var x = phrase(p)(new lexical.Scanner(input)) match {
+      case Success(result, _) => println("Success!"); Some(result)
+      case n @ _ => println(n); None
+    }
 
     println(x)
 
@@ -166,11 +159,13 @@ abstract class BazComponent {
   def buildString(implicit level: Int, b: StringBuilder) {
 
     def between(sep: String, things: Seq[BazComponent])(implicit lev: Int) {
+      b append "[ "
       var first = true
       for (t <- things) {
         if (first) first = false else b append sep
         t.buildString(lev, b)
       }
+      b append "] "
     }
 
     def betweenList(before: String, sep: String, after: String, things: Seq[BazComponent])(implicit lev: Int) {
